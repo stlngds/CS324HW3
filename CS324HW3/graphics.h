@@ -3,10 +3,19 @@
 #include <vector>
 #include <string>
 
+constexpr int X_TRANS = 1;
+constexpr int Y_TRANS = 2;
+constexpr int Z_TRANS = 3;
+constexpr int X_ROT = 4;
+constexpr int Y_ROT = 5;
+constexpr int Z_ROT = 6;
+constexpr int PERSPECTIVE = 7;
+
 class Point {
 public:
     double x;
     double y;
+    double z;
 };
 
 struct Window {
@@ -21,6 +30,55 @@ struct Viewport {
     double vp_min_y;
     double vp_max_x;
     double vp_max_y;
+};
+
+//Vectors of four doubles.
+struct vec4 {
+    double values[4];
+    vec4() {
+        values[0] = values[1] = values[2] = values[3] = 0;
+    }
+    vec4(double x, double y, double z, double w) {
+        values[0] = x;
+        values[1] = y;
+        values[2] = z;
+        values[3] = w;
+    }
+    const double& operator[] (int index) const {
+        return values[index];
+    }
+    double& operator[] (int index) {
+        return values[index];
+    }
+};
+
+//Column-major 4x4 matrix of double vectors (access ith row and jth column with M[j][i]).
+struct mat4 {
+    vec4 columns[4];
+
+    mat4() {
+        columns[0] = vec4(1, 0, 0, 0);
+        columns[1] = vec4(0, 1, 0, 0);
+        columns[2] = vec4(0, 0, 1, 0);
+        columns[3] = vec4(0, 0, 0, 1);
+    }
+
+    mat4(vec4 x, vec4 y, vec4 z, vec4 w)
+    {
+        columns[0] = x;
+        columns[1] = y;
+        columns[2] = z;
+        columns[3] = w;
+    }
+
+    const vec4& operator[] (int index) const
+    {
+        return columns[index];
+    }
+    vec4& operator[] (int index)
+    {
+        return columns[index];
+    }
 };
 
 

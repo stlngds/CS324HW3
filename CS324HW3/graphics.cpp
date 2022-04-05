@@ -4,7 +4,46 @@
 Point pg;
 Viewport v;
 Window w;
+mat4 CAMERA;
 
+//////////////////////////////////////
+//Vector/Matrix manipulation
+//////////////////////////////////////
+
+//Pre-multiply a vector, by a matrix on the left.
+vec4 operator*(const mat4& m, const vec4& v)
+{
+    return vec4(
+        m[0][0] * v[0] + m[1][0] * v[1] + m[2][0] * v[2] + m[3][0] * v[3],
+        m[0][1] * v[0] + m[1][1] * v[1] + m[2][1] * v[2] + m[3][1] * v[3],
+        m[0][2] * v[0] + m[1][2] * v[1] + m[2][2] * v[2] + m[3][2] * v[3],
+        m[0][3] * v[0] + m[1][3] * v[1] + m[2][3] * v[2] + m[3][3] * v[3]
+    );
+}
+
+//Post-multiply a vector, by a matrix on the right
+vec4 operator*(const vec4& v, const mat4& m)
+{
+    return vec4(
+        v[0] * m[0][0] + v[1] * m[0][1] + v[2] * m[0][2] + v[3] * m[0][3],
+        v[0] * m[1][0] + v[1] * m[1][1] + v[2] * m[1][2] + v[3] * m[1][3],
+        v[0] * m[2][0] + v[1] * m[2][1] + v[2] * m[2][2] + v[3] * m[2][3],
+        v[0] * m[3][0] + v[1] * m[3][1] + v[2] * m[3][2] + v[3] * m[3][3]
+    );
+}
+
+//Matrix multiplication
+mat4 operator*(const mat4& m1, const mat4& m2)
+{
+    vec4 X = m1 * m2[0];
+    vec4 Y = m1 * m2[1];
+    vec4 Z = m1 * m2[2];
+    vec4 W = m1 * m2[3];
+
+    return mat4(X, Y, Z, W);
+}
+
+/*
 //This doesn't *really* need to be a function right now; in it's current form it's just a formality for the assignment. Assigns the global Viewport bounds.
 void SetViewport(double vp_min_x, double vp_min_y, double vp_max_x, double vp_max_y) {
     v.vp_min_x = vp_min_x;
@@ -12,7 +51,9 @@ void SetViewport(double vp_min_x, double vp_min_y, double vp_max_x, double vp_ma
     v.vp_max_x = vp_max_x;
     v.vp_max_y = vp_max_y;
 }
+*/
 
+/*
 //This doesn't *really* need to be a function right now; in it's current form it's just a formality for the assignment. Assigns the global Window bounds.
 void SetWindow(double win_min_x, double win_min_y, double win_max_x, double win_max_y) {
     w.win_min_x = win_min_x;
@@ -20,13 +61,113 @@ void SetWindow(double win_min_x, double win_min_y, double win_max_x, double win_
     w.win_max_x = win_max_x;
     w.win_max_y = win_max_y;
 }
+*/
 
+
+void DefineCameraTransform(double fX, double fY, double fZ, double theta, double phi, double alpha, double r) {
+    DefineElementaryTransform(CAMERA, X_TRANS, -fX);
+    BuildElementaryTransform(CAMERA, Y_TRANS, -fY);
+    BuildElementaryTransform(CAMERA, Z_TRANS, -fZ);
+
+    BuildElementaryTransform(CAMERA, Y_ROT, -theta);
+    BuildElementaryTransform(CAMERA, X_ROT, phi);
+    BuildElementaryTransform(CAMERA, Z_ROT, -alpha);
+
+    BuildElementaryTransform(CAMERA, PERSPECTIVE, r);
+}
+
+//Create a new transformation matrix.
+void DefineElementaryTransform(mat4& m, int tf, double val) {
+    switch (tf) {
+        case X_TRANS:
+            m = {
+                vec4(1,     0, 0, 0),
+                vec4(0,     1, 0, 0),
+                vec4(0,     0, 1, 0),
+                vec4(val,   0, 0, 1)
+            };
+            break;
+        case Y_TRANS:
+            m = {
+                vec4(1, 0,      0,  0),
+                vec4(0, 1,      0,  0),
+                vec4(0, 0,      1,  0),
+                vec4(0, val,    0,  1),
+            };
+            break;
+        case Z_TRANS:
+            m = {
+                vec4(1, 0, 0,   0),
+                vec4(0, 1, 0,   0),
+                vec4(0, 0, 1,   0),
+                vec4(0, 0, val, 1)
+            };
+            break;
+        case X_ROT:
+            m = {
+                vec4(1, 0,          0,          0),
+                vec4(0, cos(val),   sin(val),   0),
+                vec4(0, -sin(val),  cos(val),   0),
+                vec4(0, 0,          0,          1)
+            };
+            break;
+        case Y_ROT:
+            m = {
+                vec4(cos(val),  0, sin(val),    0),
+                vec4(0,         1, 0,           0),
+                vec4(-sin(val), 0, cos(val),    0),
+                vec4(0,         0, 0,           1)
+            };
+            break;
+        case Z_ROT:
+            m = {
+                vec4(cos(val),  sin(val),   0, 0),
+                vec4(-sin(val), cos(val),   0, 0),
+                vec4(0,         0,          1, 0),
+                vec4(0,         0,          0, 1)
+            };
+            break;
+        case PERSPECTIVE:
+            m = {
+                vec4(1, 0, 0,   0       ),
+                vec4(0, 1, 0,   0       ),
+                vec4(0, 0, 1,   -(1/val)),
+                vec4(0, 0, 0,   1       )
+            };
+            break;
+        default:
+            break;
+    }
+}
+
+//Pre-multiply a matrix by an elementary transformation matrix.
+void BuildElementaryTransform(mat4& m, int tf, double val) {
+    mat4 tM;
+    DefineElementaryTransform(tM, tf, val);
+    m = m * tM;
+}
+
+void SetCameraTransform(mat4& m) {
+    mat4 tM;
+    CAMERA = m * tM;
+}
+
+
+/*
 //This doesn't *really* need to be a function right now; in it's current form it's just a formality for the assignment. Assigns the global canvas-space Point.
 void MoveTo2D(double x, double y) {
     pg.x = x;
     pg.y = y;
 }
+*/
 
+void Move3D(double x, double y, double z) {
+    pg.x = x;
+    pg.y = y;
+    pg.z = z;
+}
+
+/*
 void DrawTo2D(double xd, double yd, Canvas& c, color col) {
     int x = round(xd);
     int y = round(yd);
@@ -37,7 +178,18 @@ void DrawTo2D(double xd, double yd, Canvas& c, color col) {
     Line(c, gx, gy, x, y, col);
     MoveTo2D(xd, yd);
 }
+*/
 
+
+void Draw3D(double xd, double yd, double zd, mat4& aT, mat4& cT, Canvas& c, color col) {
+    vec4 tV = vec4(xd, yd, zd, 1);
+    tV = tV * aT;
+    tV = tV * cT;
+    //project onto XY plane
+    //WindowToViewport etc.
+}
+
+/*
 //Converts Window coordinates to Viewport coordinates.
 Point WindowToViewport(double x, double y) {
     //Confine passed coordinates to window bounds.
@@ -58,7 +210,6 @@ Point WindowToViewport(double x, double y) {
     * ex. For some window where x_wmin = -2 and x_wmax = 8, and some viewport where x_vmin = -1 and x_vmax = 1, we want to map the window coordinate x = 3 (which would be right in the middle of the Window) to Viewport space. Therefore:
     * x_v = -1 + ((3 + 2) * (1 + 1)) / (8 + 2) = -1 + 10/10 = 0 (which is right in the middle of the Viewport).
     * Same principles applies to the y coordinates.
-    */
     p.x = v.vp_min_x + (x - w.win_min_x) * ((v.vp_max_x - v.vp_min_x) / (w.win_max_x - w.win_min_x));
     p.y = v.vp_min_y + (y - w.win_min_y) * ((v.vp_max_y - v.vp_min_y) / (w.win_max_y - w.win_min_y));
     return p;
@@ -83,7 +234,7 @@ Point ViewportToCanvas(double x, double y, int dimx, int dimy) {
     * Solving for x_c, we get dimx * (x_v - x_vmin) / (x_vmax - x_vmin).
     * ex. For some viewport where x_vmin = -1 and x_vmax = 1, and a canvas where dimx = 1000, we want to map the cartesian viewport coordinate x_v = 0.5 to canvas/pixel-space (which would be 3/4ths across the canvas from left to right). Therefore:
     * x_c = 1000 * (0.5 + 1) / (1 + 1) = 1000 * 0.75 = 750 (indeed, 3/4ths across the canvas from left to right).
-    */
+    
     p.x = dimx * ((x - v.vp_min_x) / (v.vp_max_x - v.vp_min_x));
     //the y dimension is flipped in canvas-space, compared to cartesian space; 0 is at the very top.
     p.y = dimy * ((-y - v.vp_min_y) / (v.vp_max_y - v.vp_min_y));
@@ -96,6 +247,11 @@ void InitGraphics() {
     SetViewport(-1.0, -1.0, 1.0, 1.0);
     SetWindow(-2.0, -2.0, 9.0, 9.0);
 }
+*/
+
+
+
+
 
 
 //////////////////////////////////////
