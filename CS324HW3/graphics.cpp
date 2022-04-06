@@ -1,10 +1,12 @@
 #include <fstream>
-
 #include "graphics.h"
+#include <stack>
+using namespace std;
 Point pg;
 Viewport v;
 Window w;
 mat4 CAMERA;
+
 
 //////////////////////////////////////
 //Vector/Matrix manipulation
@@ -260,6 +262,27 @@ void SetCameraTransform(mat4& m) {
     CAMERA = m * tM;
 }
 
+
+//////////////////////////////////////
+//Other draw functions
+//////////////////////////////////////
+
+void DrawPolygon(stack<Point> pstack, mat4& aT, mat4& cT, Canvas& c, color col) {
+    Point p;
+    while (!pstack.empty()) {
+        p = pstack.top();
+        Draw3D(p[0], p[1], p[2], aT, cT, c, col);
+    }
+}
+
+void DrawCube(double cs) {
+    stack<Point> SQUARE;
+    SQUARE.push(Point(cs, cs, cs));
+    SQUARE.push(Point(cs, -cs, cs));
+    SQUARE.push(Point(-cs, -cs, cs));
+    SQUARE.push(Point(-cs, cs, cs));
+
+}
 
 
 //////////////////////////////////////

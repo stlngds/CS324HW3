@@ -11,11 +11,50 @@ constexpr int Y_ROT = 5;
 constexpr int Z_ROT = 6;
 constexpr int PERSPECTIVE = 7;
 
-class Point {
-public:
+struct Point {
     double x;
     double y;
     double z;
+
+    Point() {
+        x = y = z = 0.0;
+    }
+
+    Point(double px, double py, double pz) {
+        x = px;
+        y = py;
+        z = pz;
+    }
+
+    //this should absolutely be a vector but I don't wanna rewrite old code that references p.x and the like.
+    double& operator[] (int index) {
+        switch (index) {
+            case 0:
+                return x;
+                break;
+            case 1:
+                return y;
+                break;
+            case 2:
+                return z;
+                break;
+        }
+    }
+    const double& operator[] (int index) const {
+        switch (index) {
+        case 0:
+            return x;
+            break;
+        case 1:
+            return y;
+            break;
+        case 2:
+            return z;
+            break;
+        default:
+            return 0.0;
+        }
+    }
 };
 
 struct Window {
@@ -51,6 +90,7 @@ struct vec4 {
         return values[index];
     }
 };
+
 
 //Column-major 4x4 matrix of double vectors (access ith row and jth column with M[j][i]).
 struct mat4 {
