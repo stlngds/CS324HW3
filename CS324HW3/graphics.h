@@ -132,10 +132,23 @@ private:
 
 void Line(Canvas& c, int x1, int y1, int x2, int y2, color color);
 void SaveCanvasToFile(Canvas const& canvas, std::string const& fileName);
+
+vec4 operator*(const mat4& m, const vec4& v);
+vec4 operator*(const vec4& v, const mat4& m);
+mat4 operator*(const mat4& m1, const mat4& m2);
+Point ApplyTransform(double x, double y, double z, mat4& m);
+
 void SetViewport(double vp_min_x, double vp_min_y, double vp_max_x, double vp_max_y);
 void SetWindow(double win_min_x, double win_min_y, double win_max_x, double win_max_y);
 void MoveTo2D(double x, double y);
-void DrawTo2D(double xd, double yd, Canvas& c, color col = colors::BLACK);
+void Move3D(double x, double y, double z);
+void DrawTo2D(double xd, double yd, Canvas& c, color col);
+void Draw3D(double xd, double yd, double zd, mat4& aT, mat4& cT, Canvas& c, color col);
 Point WindowToViewport(double x, double y);
 Point ViewportToCanvas(double x, double y, int dimx, int dimy);
 void InitGraphics();
+
+void DefineCameraTransform(double fX, double fY, double fZ, double theta, double phi, double alpha, double r);
+void DefineElementaryTransform(mat4& m, int tf, double val);
+void BuildElementaryTransform(mat4& m, int tf, double val);
+void SetCameraTransform(mat4& m);
