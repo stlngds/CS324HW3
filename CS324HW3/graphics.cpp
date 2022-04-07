@@ -88,8 +88,8 @@ void Move3D(double x, double y, double z) {
     pg.y = y;
     pg.z = z;
 
-    //Point p = ApplyTransform(pg.x, pg.y, pg.z, CAMERA);
-    //MoveTo2D(p.x, p.y);
+    Point p = ApplyTransform(pg.x, pg.y, pg.z, CAMERA);
+    MoveTo2D(p.x, p.y);
 }
 
 void DrawTo2D(double xd, double yd, Canvas& c, color col) {
@@ -195,63 +195,76 @@ void DefineElementaryTransform(mat4& m, int tf, double val) {
     switch (tf) {
         case X_TRANS:
             m = {
-                vec4(1,     0, 0, 0),
+                vec4(1,     0, 0, val),
                 vec4(0,     1, 0, 0),
                 vec4(0,     0, 1, 0),
-                vec4(val,   0, 0, 1)
+                vec4(0,     0, 0, 1)
             };
             break;
         case Y_TRANS:
             m = {
                 vec4(1, 0,      0,  0),
-                vec4(0, 1,      0,  0),
+                vec4(0, 1,      0,  val),
                 vec4(0, 0,      1,  0),
-                vec4(0, val,    0,  1),
+                vec4(0, 0,      0,  1),
             };
             break;
         case Z_TRANS:
             m = {
                 vec4(1, 0, 0,   0),
                 vec4(0, 1, 0,   0),
-                vec4(0, 0, 1,   0),
-                vec4(0, 0, val, 1)
+                vec4(0, 0, 1,   val),
+                vec4(0, 0, 0,   1)
             };
             break;
         case X_ROT:
+            val = val * PI / 180;
             m = {
                 vec4(1, 0,          0,          0),
-                vec4(0, cos(val),   sin(val),   0),
-                vec4(0, -sin(val),  cos(val),   0),
+                vec4(0, cos(val),   -sin(val),   0),
+                vec4(0, sin(val),   cos(val),   0),
                 vec4(0, 0,          0,          1)
             };
             break;
         case Y_ROT:
+            val = val * PI / 180;
             m = {
-                vec4(cos(val),  0, sin(val),    0),
+                vec4(cos(val),  0, -sin(val),    0),
                 vec4(0,         1, 0,           0),
-                vec4(-sin(val), 0, cos(val),    0),
+                vec4(sin(val),  0, cos(val),    0),
                 vec4(0,         0, 0,           1)
             };
             break;
         case Z_ROT:
+            val = val * PI / 180;
             m = {
-                vec4(cos(val),  sin(val),   0, 0),
-                vec4(-sin(val), cos(val),   0, 0),
+                vec4(cos(val), -sin(val),   0, 0),
+                vec4(sin(val), cos(val),    0, 0),
                 vec4(0,         0,          1, 0),
                 vec4(0,         0,          0, 1)
             };
             break;
         case PERSPECTIVE:
             m = {
-                vec4(1, 0, 0,   0       ),
-                vec4(0, 1, 0,   0       ),
-                vec4(0, 0, 1,   -(1/val)),
-                vec4(0, 0, 0,   1       )
+                vec4(1, 0, 0,        0),
+                vec4(0, 1, 0,        0),
+                vec4(0, 0, 1,        0),
+                vec4(0, 0, -(1/val), 1)
             };
             break;
         default:
             break;
     }
+
+    for (int x = 0; x < 4; x++)
+    {
+        for (int y = 0; y < 4; y++)
+        {
+            printf("%lf ", CAMERA[y][x]);
+        }
+        printf("\n");
+    }
+    printf("\n");
 }
 
 //Pre-multiply a matrix by an elementary transformation matrix.

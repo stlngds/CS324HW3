@@ -5,6 +5,9 @@
 #include <stack>
 using namespace std;
 
+
+constexpr double PI = 3.14159265358979;
+
 constexpr int X_TRANS = 1;
 constexpr int Y_TRANS = 2;
 constexpr int Z_TRANS = 3;

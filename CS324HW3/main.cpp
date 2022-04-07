@@ -11,7 +11,6 @@
 #include "graphics.h"
 #include <math.h>
 
-constexpr double PI = 3.14159265358979;
 
 int main() {
 
@@ -58,6 +57,7 @@ int main() {
 		}
 		printf("\n");
 	}
+	printf("\n");
 
 	std::string fileName("test.ppm");
 	SaveCanvasToFile(gc, fileName);
