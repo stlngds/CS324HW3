@@ -2,6 +2,8 @@
 
 #include <vector>
 #include <string>
+#include <stack>
+using namespace std;
 
 constexpr int X_TRANS = 1;
 constexpr int Y_TRANS = 2;
@@ -183,7 +185,7 @@ void SetWindow(double win_min_x, double win_min_y, double win_max_x, double win_
 void MoveTo2D(double x, double y);
 void Move3D(double x, double y, double z);
 void DrawTo2D(double xd, double yd, Canvas& c, color col);
-void Draw3D(double xd, double yd, double zd, mat4& aT, mat4& cT, Canvas& c, color col);
+void Draw3D(double xd, double yd, double zd, mat4& cT, Canvas& c, color col);
 Point WindowToViewport(double x, double y);
 Point ViewportToCanvas(double x, double y, int dimx, int dimy);
 void InitGraphics();
@@ -192,3 +194,7 @@ void DefineCameraTransform(double fX, double fY, double fZ, double theta, double
 void DefineElementaryTransform(mat4& m, int tf, double val);
 void BuildElementaryTransform(mat4& m, int tf, double val);
 void SetCameraTransform(mat4& m);
+mat4 GetCameraTransform();
+
+void DrawPolygon(stack<Point> pstack, mat4& cT, Canvas& c, color col);
+void DrawCube(double cs, Canvas& c, color col);

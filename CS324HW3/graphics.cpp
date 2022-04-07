@@ -1,6 +1,5 @@
 #include <fstream>
 #include "graphics.h"
-#include <stack>
 using namespace std;
 Point pg;
 Viewport v;
@@ -88,6 +87,9 @@ void Move3D(double x, double y, double z) {
     pg.x = x;
     pg.y = y;
     pg.z = z;
+
+    //Point p = ApplyTransform(pg.x, pg.y, pg.z, CAMERA);
+    //MoveTo2D(p.x, p.y);
 }
 
 void DrawTo2D(double xd, double yd, Canvas& c, color col) {
@@ -101,11 +103,12 @@ void DrawTo2D(double xd, double yd, Canvas& c, color col) {
     MoveTo2D(xd, yd);
 }
 
-void Draw3D(double xd, double yd, double zd, mat4& aT, mat4& cT, Canvas& c, color col) {
+void Draw3D(double xd, double yd, double zd, mat4& cT, Canvas& c, color col) {
     //project onto XY plane
-    Point p = ApplyTransform(xd, yd, zd, aT);
+    Point p = ApplyTransform(xd, yd, zd, cT);
     p = ApplyTransform(p.x, p.y, p.z, cT);
-    //WindowToViewport etc.
+    p = WindowToViewport(p.x, p.y);
+    p = ViewportToCanvas(p.x, p.y, 1000, 1000);
     DrawTo2D(p.x, p.y, c, col);
     Move3D(xd, yd, zd);
 }
@@ -166,7 +169,8 @@ Point ViewportToCanvas(double x, double y, int dimx, int dimy) {
 void InitGraphics() {
     Move3D(0.0, 0.0, 0.0);
     SetViewport(-1.0, -1.0, 1.0, 1.0);
-    SetWindow(-2.0, -2.0, 9.0, 9.0);
+    SetWindow(-11.0, -11.0, 11.0, 11.0);
+    DefineCameraTransform(0.0, 1.0, 0.0, 45.0, -30.0, 0.0, 25.0);
 }
 
 //////////////////////////////////////
@@ -262,26 +266,31 @@ void SetCameraTransform(mat4& m) {
     CAMERA = m * tM;
 }
 
+mat4 GetCameraTransform() {
+    return CAMERA;
+}
 
 //////////////////////////////////////
 //Other draw functions
 //////////////////////////////////////
 
-void DrawPolygon(stack<Point> pstack, mat4& aT, mat4& cT, Canvas& c, color col) {
+void DrawPolygon(stack<Point> pstack, mat4& cT, Canvas& c, color col) {
     Point p;
     while (!pstack.empty()) {
         p = pstack.top();
-        Draw3D(p[0], p[1], p[2], aT, cT, c, col);
+        Draw3D(p[0], p[1], p[2], cT, c, col);
+        pstack.pop();
     }
 }
 
-void DrawCube(double cs) {
+void DrawCube(double cs, Canvas& c, color col) {
     stack<Point> SQUARE;
     SQUARE.push(Point(cs, cs, cs));
     SQUARE.push(Point(cs, -cs, cs));
     SQUARE.push(Point(-cs, -cs, cs));
     SQUARE.push(Point(-cs, cs, cs));
-
+    
+    DrawPolygon(SQUARE, CAMERA, c, col);
 }
 
 
