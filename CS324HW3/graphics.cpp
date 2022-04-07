@@ -89,6 +89,8 @@ void Move3D(double x, double y, double z) {
     pg.z = z;
 
     Point p = ApplyTransform(pg.x, pg.y, pg.z, CAMERA);
+    p = WindowToViewport(p.x, p.y);
+    p = ViewportToCanvas(p.x, p.y, 1000, 1000);
     MoveTo2D(p.x, p.y);
 }
 
@@ -98,7 +100,7 @@ void DrawTo2D(double xd, double yd, Canvas& c, color col) {
     int gx = round(pg.x);
     int gy = round(pg.y);
 
-    //printf("x: %i, y: %i, gx: %i, gy: %i\n", x, y, gx, gy); //Debug.
+    printf("x: %i, y: %i, gx: %i, gy: %i\n", x, y, gx, gy); //Debug.
     Line(c, gx, gy, x, y, col);
     MoveTo2D(xd, yd);
 }
@@ -109,8 +111,9 @@ void Draw3D(double xd, double yd, double zd, mat4& cT, Canvas& c, color col) {
     p = ApplyTransform(p.x, p.y, p.z, cT);
     p = WindowToViewport(p.x, p.y);
     p = ViewportToCanvas(p.x, p.y, 1000, 1000);
+    //printf("%lf %lf %lf %lf\n", p.x, p.y, pg.x, pg.y);
     DrawTo2D(p.x, p.y, c, col);
-    Move3D(xd, yd, zd);
+    //Move3D(xd, yd, zd);
 }
 
 //Converts Window coordinates to Viewport coordinates.

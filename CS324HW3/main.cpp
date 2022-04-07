@@ -39,15 +39,14 @@ int main() {
 	Draw3D(-1, 0, 0, CAMERA, gc, colors::RED);
 	Move3D(0, 0, 1);
 	Draw3D(0, 0, -1, CAMERA, gc, colors::BLUE);
-	/*
-	for (x = (-2 * PI); x <= (2 * PI); x += .5) {
-		for (y = (-2 * PI); y <= (2 * PI); y += .5) {
+	for (x = (-2 * PI); x <= (2 * PI); x += .1) {
+		for (y = (-2 * PI); y <= (2 * PI); y += .1) {
 			r = (pow(x, 2) + pow(y, 2));
 			z = ((sin(r) / r) / (9 * cos((x / (y + 0.02)))));
 			Draw3D(x, y, z, CAMERA, gc, colors::BLACK);
 		}
+		
 	}
-	*/
 
 	for (int x = 0; x < 4; x++)
 	{
