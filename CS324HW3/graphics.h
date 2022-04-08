@@ -76,7 +76,7 @@ struct Viewport {
     double vp_max_y;
 };
 
-//Vectors of four doubles.
+//Vector of four doubles.
 struct vec4 {
     double values[4];
     vec4() {
@@ -97,7 +97,7 @@ struct vec4 {
 };
 
 
-//Column-major 4x4 matrix of double vectors (access ith row and jth column with M[j][i]).
+//COLUMN-MAJOR 4x4 matrix of double vectors (access ith row and jth column with M[j][i]).
 struct mat4 {
     vec4 columns[4];
 
@@ -196,8 +196,9 @@ void InitGraphics();
 void DefineCameraTransform(double fX, double fY, double fZ, double theta, double phi, double alpha, double r);
 void DefineElementaryTransform(mat4& m, int tf, double val);
 void BuildElementaryTransform(mat4& m, int tf, double val);
+void BuildElementaryTransform(vec4& v, int tf, double val);
 void SetCameraTransform(mat4& m);
 mat4 GetCameraTransform();
 
-void DrawPolygon(stack<Point> pstack, mat4& cT, Canvas& c, color col);
-void DrawCube(double cs, Canvas& c, color col);
+void DrawPolygon(vec4* p, mat4& cT, Canvas& c, color col, int size);
+void DrawCube(double x, double y, double z, double theta, double phi, double alpha, double cs, Canvas& c, color col);

@@ -83,6 +83,7 @@ void MoveTo2D(double x, double y) {
     pg.y = y;
 }
 
+//Applies the Camera transform to a point, then sets the global point to the result. At the moment, pg.z isn't used for anything.
 void Move3D(double x, double y, double z) {
     Point p = ApplyTransform(x, y, z, CAMERA);
     pg.x = p.x;
@@ -90,6 +91,7 @@ void Move3D(double x, double y, double z) {
     pg.z = p.z;
 }
 
+//Given 2D coordinates, maps them to Canvas space and draws from the current global point coordinates to the passed coordinates.
 void DrawTo2D(double xd, double yd, Canvas& c, color col) {
     Point p;
 
@@ -103,16 +105,17 @@ void DrawTo2D(double xd, double yd, Canvas& c, color col) {
     int gx = round(p.x);
     int gy = round(p.y);
 
-    printf("x: %i, y: %i, gx: %i, gy: %i\n", x, y, gx, gy); //Debug.
+    //printf("x: %i, y: %i, gx: %i, gy: %i\n", x, y, gx, gy); //Debug.
     Line(c, gx, gy, x, y, col);
     MoveTo2D(xd, yd);
 }
 
+//Applies the Camera transform to a point, passes the result to DrawTo2D to actually be drawn, then moves the global point to the coordinates passed.
 void Draw3D(double xd, double yd, double zd, mat4& cT, Canvas& c, color col) {
     //project onto XY plane
     Point p = ApplyTransform(xd, yd, zd, cT);
     //printf("x: %lf, y: %lf\n", p.x, p.y);
-    printf("%lf %lf %lf %lf\n", p.x, p.y, pg.x, pg.y);
+    //printf("%lf %lf %lf %lf\n", p.x, p.y, pg.x, pg.y);
     DrawTo2D(p.x, p.y, c, col);
     Move3D(xd, yd, zd);
 }
@@ -169,12 +172,12 @@ Point ViewportToCanvas(double x, double y, int dimx, int dimy) {
     return p;
 }
 
-//Sets the global Viewport, Window, and Point to reasonable starting values.
+//Sets the global Viewport, Window, Point, and Camera to reasonable starting values.
 void InitGraphics() {
     Move3D(0.0, 0.0, 0.0);
     SetViewport(-1.0, -1.0, 1.0, 1.0);
     SetWindow(-11.0, -11.0, 11.0, 11.0);
-    DefineCameraTransform(0.0, 1.0, 0.0, 45.0, -30.0, 0.0, 1000.0);
+    DefineCameraTransform(0.0, 1.0, 0.0, 35.0, 60.0, 0.0, 1000.0);
 }
 
 //////////////////////////////////////
@@ -192,6 +195,17 @@ void DefineCameraTransform(double fX, double fY, double fZ, double theta, double
     BuildElementaryTransform(CAMERA, Z_ROT, -alpha);
 
     BuildElementaryTransform(CAMERA, PERSPECTIVE, r);
+}
+
+//Applies transformations to a point in much the same way they'd be applied to the Camera matrix.
+void BuildPointTransform(double fX, double fY, double fZ, double theta, double phi, double alpha, vec4& p) {
+    BuildElementaryTransform(p, X_TRANS, -fX);
+    BuildElementaryTransform(p, Y_TRANS, -fY);
+    BuildElementaryTransform(p, Z_TRANS, -fZ);
+
+    BuildElementaryTransform(p, Y_ROT, -theta);
+    BuildElementaryTransform(p, X_ROT, phi);
+    BuildElementaryTransform(p, Z_ROT, -alpha);
 }
 
 //Create a new transformation matrix.
@@ -260,6 +274,7 @@ void DefineElementaryTransform(mat4& m, int tf, double val) {
             break;
     }
 
+    /*
     for (int x = 0; x < 4; x++)
     {
         for (int y = 0; y < 4; y++)
@@ -269,6 +284,7 @@ void DefineElementaryTransform(mat4& m, int tf, double val) {
         printf("\n");
     }
     printf("\n");
+    */
 }
 
 //Pre-multiply a matrix by an elementary transformation matrix.
@@ -278,11 +294,20 @@ void BuildElementaryTransform(mat4& m, int tf, double val) {
     m = m * tM;
 }
 
+//Pre-multiply a point vector by an elementary transformation matrix.
+void BuildElementaryTransform(vec4& v, int tf, double val) {
+    mat4 tM;
+    DefineElementaryTransform(tM, tf, val);
+    v = v * tM;
+}
+
+//Sets the Camera matrix equal to the passed matrix.
 void SetCameraTransform(mat4& m) {
     mat4 tM;
     CAMERA = m * tM;
 }
 
+//Returns the Camera matrix.
 mat4 GetCameraTransform() {
     return CAMERA;
 }
@@ -291,25 +316,54 @@ mat4 GetCameraTransform() {
 //Other draw functions
 //////////////////////////////////////
 
-void DrawPolygon(stack<Point> pstack, mat4& cT, Canvas& c, color col) {
-    Point p;
-    while (!pstack.empty()) {
-        p = pstack.top();
-        Draw3D(p[0], p[1], p[2], cT, c, col);
-        pstack.pop();
+//Given a list of point vectors, draws a line between each of them in order, and draws a line from the last to the first.
+void DrawPolygon(vec4* p, mat4& cT, Canvas& c, color col, int size) {
+    Move3D(p[0][0], p[0][1], p[0][2]);
+    for (int i = 0; i < size; i++) {
+        Draw3D(p[i][0], p[i][1], p[i][2], cT, c, col);
     }
+    Draw3D(p[0][0], p[0][1], p[0][2], cT, c, col);
 }
 
-void DrawCube(double cs, Canvas& c, color col) {
-    stack<Point> SQUARE;
+//Models a cube of a given size, location, color, and orientation, and draws it.
+void DrawCube(double x, double y, double z, double theta, double phi, double alpha, double cs, Canvas& c, color col) {
     Move3D(cs, cs, cs);
-    SQUARE.push(Point(cs, cs, cs));
-    SQUARE.push(Point(cs, -cs, cs));
-    SQUARE.push(Point(-cs, -cs, cs));
-    SQUARE.push(Point(-cs, cs, cs));
-    SQUARE.push(Point(cs, cs, cs));
-    
-    DrawPolygon(SQUARE, CAMERA, c, col);
+    vec4 SQUARE[4];
+    SQUARE[0] = vec4(cs, cs, cs, 1);
+    SQUARE[1] = vec4(-cs, cs, cs, 1);
+    SQUARE[2] = vec4(-cs, -cs, cs, 1);
+    SQUARE[3] = vec4(cs, -cs, cs, 1);
+    vec4 FRONT[4];
+    vec4 BACK[4];
+    vec4 LEFT[4];
+    vec4 RIGHT[4];
+    vec4 TOP[4];
+    vec4 BOTTOM[4];
+
+    for (int i = 0; i < 4; i++) {
+        FRONT[i] = BACK[i] = LEFT[i] = RIGHT[i] = TOP[i] = BOTTOM[i] = SQUARE[i] * mat4();
+
+        BuildElementaryTransform(BACK[i], Z_TRANS, (-cs * 2));
+        BuildElementaryTransform(LEFT[i], Y_ROT, -90);
+        BuildElementaryTransform(RIGHT[i], Y_ROT, 90);
+        BuildElementaryTransform(TOP[i], X_ROT, -90);
+        BuildElementaryTransform(BOTTOM[i], X_ROT, 90);
+
+        BuildPointTransform(x, y, z, theta, phi, alpha, FRONT[i]);
+        BuildPointTransform(x, y, z, theta, phi, alpha, BACK[i]);
+        BuildPointTransform(x, y, z, theta, phi, alpha, LEFT[i]);
+        BuildPointTransform(x, y, z, theta, phi, alpha, RIGHT[i]);
+        BuildPointTransform(x, y, z, theta, phi, alpha, TOP[i]);
+        BuildPointTransform(x, y, z, theta, phi, alpha, BOTTOM[i]);
+    }
+
+    DrawPolygon(FRONT, CAMERA, c, col, 4);
+    DrawPolygon(BACK, CAMERA, c, col, 4);
+    DrawPolygon(LEFT, CAMERA, c, col, 4);
+    DrawPolygon(RIGHT, CAMERA, c, col, 4);
+    DrawPolygon(TOP, CAMERA, c, col, 4);
+    DrawPolygon(BOTTOM, CAMERA, c, col, 4);
+
 }
 
 
