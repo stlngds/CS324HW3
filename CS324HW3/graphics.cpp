@@ -84,21 +84,24 @@ void MoveTo2D(double x, double y) {
 }
 
 void Move3D(double x, double y, double z) {
-    pg.x = x;
-    pg.y = y;
-    pg.z = z;
-
-    Point p = ApplyTransform(pg.x, pg.y, pg.z, CAMERA);
-    p = WindowToViewport(p.x, p.y);
-    p = ViewportToCanvas(p.x, p.y, 1000, 1000);
-    MoveTo2D(p.x, p.y);
+    Point p = ApplyTransform(x, y, z, CAMERA);
+    pg.x = p.x;
+    pg.y = p.y;
+    pg.z = p.z;
 }
 
 void DrawTo2D(double xd, double yd, Canvas& c, color col) {
-    int x = round(xd);
-    int y = round(yd);
-    int gx = round(pg.x);
-    int gy = round(pg.y);
+    Point p;
+
+    p = WindowToViewport(xd, yd);
+    p = ViewportToCanvas(p.x, p.y, 1000, 1000);
+    int x = round(p.x);
+    int y = round(p.y);
+
+    p = WindowToViewport(pg.x, pg.y);
+    p = ViewportToCanvas(p.x, p.y, 1000, 1000);
+    int gx = round(p.x);
+    int gy = round(p.y);
 
     printf("x: %i, y: %i, gx: %i, gy: %i\n", x, y, gx, gy); //Debug.
     Line(c, gx, gy, x, y, col);
@@ -108,12 +111,10 @@ void DrawTo2D(double xd, double yd, Canvas& c, color col) {
 void Draw3D(double xd, double yd, double zd, mat4& cT, Canvas& c, color col) {
     //project onto XY plane
     Point p = ApplyTransform(xd, yd, zd, cT);
-    p = ApplyTransform(p.x, p.y, p.z, cT);
-    p = WindowToViewport(p.x, p.y);
-    p = ViewportToCanvas(p.x, p.y, 1000, 1000);
-    //printf("%lf %lf %lf %lf\n", p.x, p.y, pg.x, pg.y);
+    //printf("x: %lf, y: %lf\n", p.x, p.y);
+    printf("%lf %lf %lf %lf\n", p.x, p.y, pg.x, pg.y);
     DrawTo2D(p.x, p.y, c, col);
-    //Move3D(xd, yd, zd);
+    Move3D(xd, yd, zd);
 }
 
 //Converts Window coordinates to Viewport coordinates.
@@ -173,7 +174,7 @@ void InitGraphics() {
     Move3D(0.0, 0.0, 0.0);
     SetViewport(-1.0, -1.0, 1.0, 1.0);
     SetWindow(-11.0, -11.0, 11.0, 11.0);
-    DefineCameraTransform(0.0, 1.0, 0.0, 45.0, -30.0, 0.0, 25.0);
+    DefineCameraTransform(0.0, 1.0, 0.0, 45.0, -30.0, 0.0, 1000.0);
 }
 
 //////////////////////////////////////
@@ -301,10 +302,12 @@ void DrawPolygon(stack<Point> pstack, mat4& cT, Canvas& c, color col) {
 
 void DrawCube(double cs, Canvas& c, color col) {
     stack<Point> SQUARE;
+    Move3D(cs, cs, cs);
     SQUARE.push(Point(cs, cs, cs));
     SQUARE.push(Point(cs, -cs, cs));
     SQUARE.push(Point(-cs, -cs, cs));
     SQUARE.push(Point(-cs, cs, cs));
+    SQUARE.push(Point(cs, cs, cs));
     
     DrawPolygon(SQUARE, CAMERA, c, col);
 }

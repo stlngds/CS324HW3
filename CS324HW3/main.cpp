@@ -30,23 +30,32 @@ int main() {
 	//////////////////////////////////////
 	//Plots
 	//////////////////////////////////////
+
+	//Plot the function (sin(r) / r) / (9*cos(x / (y + .02))), for r = x^2 + y^2, x = -2PI thru 2PI, and y = -2PI thru 2PI.
+	/*
 	Canvas gc(size, size, colors::WHITE);
 	//DrawCube(0.5, gc, colors::BLACK);
-	SetWindow((-2 * PI), (-2 * PI), (2 * PI), (2 * PI));
-	Move3D(0, 1, 0);
-	Draw3D(0, -1, 0, CAMERA, gc, colors::BLACK);
-	Move3D(1, 0, 0);
-	Draw3D(-1, 0, 0, CAMERA, gc, colors::RED);
-	Move3D(0, 0, 1);
-	Draw3D(0, 0, -1, CAMERA, gc, colors::BLUE);
-	for (x = (-2 * PI); x <= (2 * PI); x += .1) {
-		for (y = (-2 * PI); y <= (2 * PI); y += .1) {
+	SetWindow((-15), (-15), (15), (15));
+	for (x = (-2 * PI); x <= (2 * PI); x += .2) {
+		for (y = (-2 * PI); y <= (2 * PI); y += .2) {
 			r = (pow(x, 2) + pow(y, 2));
-			z = ((sin(r) / r) / (9 * cos((x / (y + 0.02)))));
-			Draw3D(x, y, z, CAMERA, gc, colors::BLACK);
+			z = ( (sin(r) / r) / (9 * cos( (x / (y + 0.02) ) ) ) );
+			if (y == (-2 * PI) || y == (2 * PI) || x == (-2 * PI) || x == (2 * PI)) {
+				Move3D(x, y, z);
+			}
+			else {
+				Draw3D(x, y, z, CAMERA, gc, colors::RED);
+			}
+			printf("%lf %lf %lf ", x, y, z);
 		}
-		
 	}
+
+	Move3D(0, 10, 0);
+	Draw3D(0, -10, 0, CAMERA, gc, colors::BLACK);
+	Move3D(10, 0, 0);
+	Draw3D(-10, 0, 0, CAMERA, gc, colors::BLACK);
+	Move3D(0, 0, 10);
+	Draw3D(0, 0, -10, CAMERA, gc, colors::BLACK);
 
 	for (int x = 0; x < 4; x++)
 	{
@@ -58,9 +67,24 @@ int main() {
 	}
 	printf("\n");
 
-	std::string fileName("test.ppm");
+	std::string fileName("function.ppm");
 	SaveCanvasToFile(gc, fileName);
 
+	*/
+
+	//Draw a cube
+	Canvas gc(size, size, colors::WHITE);
+	SetWindow((-15), (-15), (15), (15));
+	DrawCube(0.5, gc, colors::BLACK);
+	
+	std::string fileName("cube.ppm");
+	SaveCanvasToFile(gc, fileName);
+	
+	
+	
+	
+	
+	
 	/*
 	//Plot the function y = 3.0*e^(-0.33x)*sin(3x) for x = 0 to x = 3*pi, with a continuous line.
 	Canvas gc(size, size, colors::WHITE); //Background color is white.
